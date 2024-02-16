@@ -1,0 +1,28 @@
+version: '3'
+services:
+
+  # Nginx контейнер для вебсервера
+  nginx:
+    # Используем готовый образ для nginx контейнера
+    image: nginx:alpine
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "80:80" # Внутренний порт контейнера пробрасываем на host машину
+    volumes:
+      - ./backend:/var/www/html
+      - ./docker/nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf
+
+    # Backend контейнер для php
+  backend:
+    # Для установки нужных пакетов используем не чистый образ, а инструкции из конкретного файла Dockerfile
+    build:
+      context: .
+      dockerfile: ./docker/backend/Dockerfile
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    tty: true
+    volumes:
+      - ./backend:/var/www/html
+      - ./docker/backend/php.ini:/usr/local/etc/php/php.ini
